@@ -1,10 +1,10 @@
 import { Game } from "@/components/Game";
 import Image from "next/image";
 import Link from "next/link";
+import { NUM_PLAYERS, NUM_DETONATE_ALLERS } from "@/constants";
 
 export default function Home() {
-  const NUM_PLAYERS = 3;
-  const NUM_DETONATORS = Math.floor(NUM_PLAYERS / 2);
+  
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -16,8 +16,8 @@ export default function Home() {
           a detonator
         </span>
           {" "}
-          Out of these, {NUM_DETONATORS}{" "}
-          {NUM_DETONATORS > 1
+          Out of these, {NUM_DETONATE_ALLERS}{" "}
+          {NUM_DETONATE_ALLERS > 1
             ? `random players have special detonators which detonate everyone except themselves`
             : "random player has a special detonator which detonates everyone except themself "}
           {" "}

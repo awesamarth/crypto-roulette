@@ -117,7 +117,7 @@ export const Game = () => {
             <div>
               <h2>Winners</h2>
             {roomData.activePlayersArray.map((winner: any) => (
-              <div>{winner}</div>
+              <div key={winner}>{winner}</div>
             ))}
             </div>:"Everyone was detonated. Should have been more brave."}
             
