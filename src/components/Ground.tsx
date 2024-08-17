@@ -1,3 +1,5 @@
+
+
 'use client'
 
 import { usePlane } from "@react-three/cannon"
@@ -15,7 +17,13 @@ export const Ground = () =>{
 
 
     return (
-        <mesh ref={ref}>
+        <mesh ref={ref}
+        onClick={(e)=>{e.stopPropagation()
+            //@ts-ignore
+            const [x,y,z] = Object.values(e.point).map(val=>Math.ceil (val))
+            console.log(x, y , z)
+        }}
+        >
             <planeGeometry attach="geometry" args={[100,100]} />
             {/* @ts-ignore */}
             <meshStandardMaterial  attach="material" map={roadTexture} />

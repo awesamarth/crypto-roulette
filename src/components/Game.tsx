@@ -13,7 +13,6 @@ export const Game = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [roomData, setRoomData] = useState({} as any);
   const [winners, setWinners] = useState([] as any);
-  const [isActive, setIsActive] = useState(true);
   const [numPlayersToEliminate, setNumPlayersToEliminate] = useState();
 
   useEffect(() => {

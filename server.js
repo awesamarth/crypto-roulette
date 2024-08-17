@@ -76,8 +76,11 @@ app.prepare().then(() => {
 
       roomDetails.playersArray.push(userId);
 
+
       roomData[roomId] = roomDetails;
       console.log(roomData);
+      io.in(roomId).emit("player_joined", roomData[roomId]);
+
 
       const clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
       console.log(`Number of clients in room ${roomId}: ${clientsInRoom}`);
