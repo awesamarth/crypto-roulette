@@ -3,7 +3,7 @@
   import { Sky } from "@react-three/drei";
   import { Canvas } from "@react-three/fiber";
   import { Physics } from "@react-three/cannon";
-  import { Ground } from "@/components/Ground";
+  import { Environment } from "@/components/Environment";
   import { Player } from "@/components/Player";
   import { useEffect, useState } from "react";
   import { socket } from "@/socket";
@@ -119,7 +119,7 @@
         {roomConnected ? (
           <div className="h-screen w-full">
             {roomData.gameStatus === "waiting" && (
-              <div className="absolute left-4 top-2">
+              <div className="absolute z-20 left-4 top-2">
                 waiting for {NUM_PLAYERS - roomData.playersArray.length} more
                 player{NUM_PLAYERS - roomData.playersArray.length < 2 ? "" : "s"}{" "}
                 to join
@@ -127,7 +127,7 @@
             )}
 
             <Canvas className="border-2">
-              <ambientLight intensity={1} />
+              <ambientLight intensity={2} />
               <Physics>
                 {playerPositions.map((position, index) => (
                   <Player
@@ -138,7 +138,7 @@
                     isMe={userId === roomData.playersArray[index]}
                   />
                 ))} 
-                <Ground />
+                <Environment />
                 <Table radius={TABLE_RADIUS-1 } />
 
               </Physics>

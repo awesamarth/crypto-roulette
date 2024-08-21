@@ -28,13 +28,14 @@ export const Table = ({ radius }: { radius: number }) => {
       <mesh ref={topRef}>
         <cylinderGeometry args={[radius, radius, 0.2, 32]} />
         <meshStandardMaterial color="#663300" />
-      </mesh>
+        <ambientLight intensity={0.3} />
+        </mesh>
 
       {/* Legs */}
       {legPositions.map((position, index) => (
         <mesh key={index} position={position}>
           <cylinderGeometry args={[legRadius, legRadius, legHeight, 32]} />
-          <meshStandardMaterial color="#663300" />
+          <meshStandardMaterial color="#4D2600" />
         </mesh>
       ))}
     </group>
