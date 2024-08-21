@@ -1,18 +1,18 @@
 "use client"
 
 import { NearestFilter, TextureLoader, RepeatWrapping } from "three";
-let roadTexture
+let floorTexture
 if (typeof window !== "undefined") {
     // Only load textures if we're in a browser environment
     const loader = new TextureLoader();
-    roadTexture = loader.load("/road.png");
+    floorTexture = loader.load("/floor.png");
 
   
-    roadTexture.magFilter = NearestFilter;
+    floorTexture.magFilter = NearestFilter;
 
-    roadTexture.wrapS = RepeatWrapping
-    roadTexture.wrapT = RepeatWrapping
+    floorTexture.wrapS = RepeatWrapping
+    floorTexture.wrapT = RepeatWrapping
     // roadTexture.repeat.set(10,10)
   }
 
-  export { roadTexture };
+  export { floorTexture };

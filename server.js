@@ -66,7 +66,7 @@ app.prepare().then(() => {
       let roomDetails = roomData[roomId];
       if (!roomDetails) {
         roomDetails = {
-          gameStatus: "started",
+          gameStatus: "waiting",
           playersArray: [],
           detonateAllerArray: [],
           activePlayersArray: [],
@@ -91,6 +91,7 @@ app.prepare().then(() => {
         );
         roomData[roomId].activePlayersArray = roomDetails.playersArray;
         roomData[roomId].whoseTurn = roomData[roomId].activePlayersArray[0];
+        roomData[roomId].gameStatus="started"
 
         console.log("people joined");
         console.log(roomData[roomId]);
