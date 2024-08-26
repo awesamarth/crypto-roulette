@@ -53,16 +53,21 @@ app.prepare().then(() => {
         );
         roomData[roomId].activePlayersArray.splice(randomIndex, 1);
       }
-      //add a 5 second timer here
-      //set time out for 5 seconds
+
       setTimeout(() => {
         roomData[roomId].gameStatus = "ended";
         io.in(roomId).emit("turn_processed", roomData[roomId]);
-      }, 3000);
+      }, 3500);
     }
 
     socket.on("join_room", ({ userId, roomId }) => {
+      let clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+      if (clientsInRoom===NUM_PLAYERS) {
+        return
+      }
+
       socket.join(roomId);
+      socket.roomId = roomId
       let roomDetails = roomData[roomId];
       if (!roomDetails) {
         roomDetails = {
@@ -81,8 +86,7 @@ app.prepare().then(() => {
       console.log(roomData);
       io.in(roomId).emit("player_joined", roomData[roomId]);
 
-
-      const clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+      clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
       console.log(`Number of clients in room ${roomId}: ${clientsInRoom}`);
       if (clientsInRoom == NUM_PLAYERS) {
         console.log("here's playersArray ", roomData[roomId].playersArray);
@@ -101,14 +105,18 @@ app.prepare().then(() => {
 
     socket.on("turn_played", ({ choice, userId, roomId }) => {
       if (choice === "detonate") {
+        io.in(roomId).emit("turn_init", "detonate");
+
         if (isDetonateAller(userId, roomId)) {
           console.log("detonate all others");
           roomData[roomId].activePlayersArray = [userId];
           roomData[roomId].gameStatus = "ended";
-
-          io.in(roomId).emit("turn_processed", roomData[roomId]);
+          setTimeout(() => {
+            io.in(roomId).emit("turn_processed", roomData[roomId]);
+          }, 3500);
         } else {
           console.log("self detonate pushed");
+          
           //last player in the array
           roomData[roomId].activePlayersArray = roomData[
             roomId
@@ -117,26 +125,33 @@ app.prepare().then(() => {
 
           //ending the game at this point.
           //could add a voting mechanism for continuing till the end of the array of active players
+          setTimeout(() => {
+            io.in(roomId).emit("turn_processed", roomData[roomId]);
 
-          io.in(roomId).emit("turn_processed", roomData[roomId]);
+          }, 3000);
         }
       } else {
         console.log("pass button pressed");
+        io.in(roomId).emit("turn_init", "pass");
         let userIndex = roomData[roomId].activePlayersArray.indexOf(userId);
         if (userIndex >= roomData[roomId].activePlayersArray.length - 1) {
           console.log(roomData[roomId].activePlayersArray);
           console.log(userIndex);
           console.log("chuda");
-          roomData[roomId].gameStatus = "randomly_detonating";
-          io.in(roomId).emit("turn_processed", roomData[roomId]);
-          detonateRandomPlayers(roomId);
+          setTimeout(() => {
+            roomData[roomId].gameStatus = "randomly_detonating";
+            io.in(roomId).emit("turn_processed", roomData[roomId]);
+            detonateRandomPlayers(roomId);
+            
+          }, 3000);
         } else {
           console.log("going here");
           console.log(userIndex);
           console.log(roomData[roomId].activePlayersArray);
-          roomData[roomId].whoseTurn =
-            roomData[roomId].activePlayersArray[userIndex + 1];
-          io.in(roomId).emit("turn_processed", roomData[roomId]);
+          roomData[roomId].whoseTurn =roomData[roomId].activePlayersArray[userIndex + 1];
+          setTimeout(()=>{
+            io.in(roomId).emit("turn_processed", roomData[roomId]);
+          }, 3000)
         }
       }
     });
@@ -145,6 +160,18 @@ app.prepare().then(() => {
       console.log(data);
       socket.to(data.roomId).emit("receive_message", data);
     });
+
+    socket.on("disconnect", (reason)=>{
+      console.log('someone disconnected')
+      const clientsInRoom = io.sockets.adapter.rooms.get(socket.roomId)?.size || 0;
+      if(clientsInRoom===0){
+        console.log("all players have left the room")
+        delete roomData[socket.roomId]
+
+
+      }
+      
+    })
   });
 
   httpServer

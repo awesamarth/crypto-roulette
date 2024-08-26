@@ -31,6 +31,7 @@ export const Game = () => {
     }
 
     function onDisconnect() {
+      socket.emit("disconnected", )
       setIsConnected(false);
       setTransport("N/A");
     }

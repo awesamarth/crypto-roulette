@@ -44,7 +44,7 @@ export const Environment = () => {
           e.stopPropagation();
           //@ts-ignore
           const [x, y, z] = Object.values(e.point).map((val) => Math.ceil(val));
-          console.log(x, y, z);
+          // console.log(x, y, z);
         }}
       >
         <planeGeometry attach="geometry" args={[100, 100]} />
