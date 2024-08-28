@@ -10,10 +10,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aptos-labs/ts-sdk": "^1.27.1",
     "@razorlabs/wallet-kit": "^0.4.1",
     "@react-three/cannon": "^6.6.0",
     "@react-three/drei": "^9.109.5",
     "@react-three/fiber": "^8.16.8",
+    "http-proxy-middleware": "^3.0.0",
     "nanoid": "^5.0.7",
     "next": "14.2.5",
     "nodemon": "^3.1.4",

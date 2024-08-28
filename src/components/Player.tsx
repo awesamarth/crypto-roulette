@@ -1,99 +1,110 @@
-  import { useEffect, useRef, useState } from 'react';
-  import { useThree, useFrame } from '@react-three/fiber';
-  import { Vector3, Quaternion } from 'three';
-  import { useCompoundBody } from '@react-three/cannon';
-  import { PointerLockControls } from '@react-three/drei';
+import { useEffect, useRef, useState } from 'react';
+import { useThree, useFrame } from '@react-three/fiber';
+import { Vector3, Quaternion } from 'three';
+import { useCompoundBody } from '@react-three/cannon';
+import { PointerLockControls } from '@react-three/drei';
+import * as THREE from "three"
 
-  const CAMERA_DISTANCE = 5;
-  const CAMERA_HEIGHT = 2;
-  const HEAD_OFFSET = 0.4;
-  const TABLE_RADIUS = 8; 
+const CAMERA_DISTANCE = 5;
+const CAMERA_HEIGHT = 2;
+const HEAD_OFFSET = 0.4;
+const TABLE_RADIUS = 8; 
 
-  export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerIndex }: { whoseTurn: any, userId: any, position: any, isMe: boolean, remoteRef: any, playerCount: number, playerIndex: number }) => {
-    const { camera } = useThree();
-    const [ref, api] = useCompoundBody(() => ({
-      mass: 2,
-      type: 'Dynamic',
-      position: position,
-      shapes: [
-        { type: 'Cylinder', position: [0, 0, 0], args: [0.5, 0.5, 2] },
-        { type: 'Sphere', position: [0, 0.8 + HEAD_OFFSET, 0], args: [0.4] },
-      ],
-    }));
+export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerIndex }: { whoseTurn: any, userId: any, position: any, isMe: boolean, remoteRef: any, playerCount: number, playerIndex: number }) => {
+  const { camera } = useThree();
+  const [ref, api] = useCompoundBody(() => ({
+    mass: 2,
+    type: 'Dynamic',
+    position: position,
+    shapes: [
+      { type: 'Cylinder', position: [0, 0, 0], args: [0.5, 0.5, 2] },
+      { type: 'Sphere', position: [0, 0.8 + HEAD_OFFSET, 0], args: [0.4] },
+    ],
+  }));
 
-    const [cameraRotation, setCameraRotation] = useState(new Quaternion());
-    const controlsRef = useRef();
+  console.log("the user id is: ", userId)
+  console.log("isme? ", isMe)
+  const [initialCameraRotation, setInitialCameraRotation] = useState(new Quaternion());
+  const controlsRef = useRef();
+  const initialRotationSet = useRef(false);
 
-    useEffect(() => {
-      if (isMe) {
-        setCameraRotation(camera.quaternion);
-      }
-    }, [isMe, camera]);
-
-    useEffect(() => {
+  useEffect(() => {
+    if (isMe && !initialRotationSet.current) {
       const angle = (playerIndex / playerCount) * Math.PI * 2;
-      const newPosition = [
+      const initialPosition = new Vector3(
         TABLE_RADIUS * Math.cos(angle),
-        1,
-        TABLE_RADIUS * Math.sin(angle),
-      ];
-      api.position.set(newPosition[0], newPosition[1], newPosition[2]);
-    }, [playerCount, playerIndex, api.position]);
+        CAMERA_HEIGHT,
+        TABLE_RADIUS * Math.sin(angle)
+      );
+      const lookAtCenter = new Quaternion().setFromRotationMatrix(
+        new THREE.Matrix4().lookAt(initialPosition, new Vector3(0, 1, 0), new Vector3(0, 1, 0))
+      );
+      setInitialCameraRotation(lookAtCenter);
+      camera.quaternion.copy(lookAtCenter);
+      initialRotationSet.current = true;
+    }
+  }, [isMe, playerIndex, playerCount, camera]);
 
-    const pos = useRef(position);
-    useEffect(() => {
-      api.position.subscribe((p) => (pos.current = p));
-    }, [api.position]);
+  useEffect(() => {
+    const angle = (playerIndex / playerCount) * Math.PI * 2;
+    const newPosition = [
+      TABLE_RADIUS * Math.cos(angle),
+      1,
+      TABLE_RADIUS * Math.sin(angle),
+    ];
+    api.position.set(newPosition[0], newPosition[1], newPosition[2]);
+  }, [playerCount, playerIndex, api.position]);
 
-    useFrame(() => {
-      if (isMe) {
-        const playerPosition = new Vector3(...pos.current);
-        if (whoseTurn === userId) {
-          // Zoom in on the remote when it's this player's turn
-          const angle = Math.atan2(playerPosition.z, playerPosition.x);
-          const remotePosition = new Vector3(
-            (TABLE_RADIUS - 0.5) * Math.cos(angle),
-            1.6, // Slightly above the table
-            (TABLE_RADIUS - 0.5) * Math.sin(angle)
-          );
+  const pos = useRef(position);
+  useEffect(() => {
+    api.position.subscribe((p) => (pos.current = p));
+  }, [api.position]);
 
-          // Set camera to look at the remote
-          const cameraPosition = remotePosition.clone().add(new Vector3(0, 1, 0).applyAxisAngle(new Vector3(0, 1, 0), angle));
-          camera.position.lerp(cameraPosition, 0.1);
-          // camera.lookAt(remotePosition);
-        } else {
+  useFrame(() => {
+    if (isMe) {
+      const playerPosition = new Vector3(...pos.current);
+      if (whoseTurn === userId) {
+        // Zoom in on the remote when it's this player's turn
+        const angle = Math.atan2(playerPosition.z, playerPosition.x);
+        const remotePosition = new Vector3(
+          (TABLE_RADIUS - 0.5) * Math.cos(angle),
+          1.6, // Slightly above the table
+          (TABLE_RADIUS - 0.5) * Math.sin(angle)
+        );
 
-          const cameraOffset = new Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE);  
+        // Set camera to look at the remote
+        const cameraPosition = remotePosition.clone().add(new Vector3(0, 1, 0).applyAxisAngle(new Vector3(0, 1, 0), angle));
+        camera.position.lerp(cameraPosition, 0.1);
+        // camera.lookAt(remotePosition);
+      } else {
+        const cameraOffset = new Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE);  
 
-          // Regular camera behavior
-          // camera.position.lerp(targetPosition, 0.1); // Smooth transition
-          // camera.quaternion.slerp(cameraRotation, 0.1);
-          cameraOffset.applyQuaternion(cameraRotation);
-          camera.position.copy(playerPosition).add(cameraOffset);
-          camera.quaternion.copy(cameraRotation);
-        }
+        // Use the current camera quaternion instead of the initial one
+        cameraOffset.applyQuaternion(camera.quaternion);
+        camera.position.copy(playerPosition).add(cameraOffset);
+        // Remove this line to allow PointerLockControls to work
+        // camera.quaternion.copy(initialCameraRotation);
       }
-    });
+    }
+  });
 
-
-
-    return (
-      <>
-        {isMe && <PointerLockControls ref={controlsRef} />}
-        <group ref={ref}>
-          <mesh position={[0, 0, 0]}>
-            <cylinderGeometry args={[0.3, 0.3, 1.5, 20]} />
-            <meshStandardMaterial color={isMe ? "green" : "blue"} />
-          </mesh>
-          <mesh position={[0, 0.8 + HEAD_OFFSET, 0]}>
-            <sphereGeometry args={[0.4, 16, 16]} />
-            <meshStandardMaterial color="white" />
-          </mesh>
-          {userId && whoseTurn && userId === whoseTurn && (
-            <pointLight position={[0, 1, 0]} intensity={100} />
-          )}
-          {userId}
-        </group>
-      </>
-    );
-  };
+  return (
+    <>
+      {isMe && <PointerLockControls ref={controlsRef} />}
+      <group ref={ref}>
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.3, 0.3, 1.5, 20]} />
+          <meshStandardMaterial color={isMe ? "green" : "blue"} />
+        </mesh>
+        <mesh position={[0, 0.8 + HEAD_OFFSET, 0]}>
+          <sphereGeometry args={[0.4, 16, 16]} />
+          <meshStandardMaterial color="white" />
+        </mesh>
+        {userId && whoseTurn && userId === whoseTurn && (
+          <pointLight position={[0, 1, 0]} intensity={100} />
+        )}
+        {userId}
+      </group>
+    </>
+  );
+};

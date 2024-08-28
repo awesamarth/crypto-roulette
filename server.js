@@ -56,6 +56,8 @@ app.prepare().then(() => {
 
       setTimeout(() => {
         roomData[roomId].gameStatus = "ended";
+        roomData[roomId].whoseTurn=""
+
         io.in(roomId).emit("turn_processed", roomData[roomId]);
       }, 3500);
     }
@@ -105,34 +107,46 @@ app.prepare().then(() => {
 
     socket.on("turn_played", ({ choice, userId, roomId }) => {
       if (choice === "detonate") {
-        io.in(roomId).emit("turn_init", "detonate");
+        io.in(roomId).emit("turn_init", `${roomData[roomId].whoseTurn} has chosen to detonate!`);
 
         if (isDetonateAller(userId, roomId)) {
           console.log("detonate all others");
+          setTimeout(() => {
+            io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated everyone else!` );
+
+          }, 2000);
           roomData[roomId].activePlayersArray = [userId];
           roomData[roomId].gameStatus = "ended";
+          roomData[roomId].whoseTurn=""
           setTimeout(() => {
             io.in(roomId).emit("turn_processed", roomData[roomId]);
-          }, 3500);
+          }, 5000);
         } else {
           console.log("self detonate pushed");
+
+          setTimeout(() => {
+            io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated themself!` );
+
+          }, 2000);
           
           //last player in the array
           roomData[roomId].activePlayersArray = roomData[
             roomId
           ].activePlayersArray.filter((player) => player != userId);
           roomData[roomId].gameStatus = "ended";
+          roomData[roomId].whoseTurn=""
+
 
           //ending the game at this point.
           //could add a voting mechanism for continuing till the end of the array of active players
           setTimeout(() => {
             io.in(roomId).emit("turn_processed", roomData[roomId]);
 
-          }, 3000);
+          }, 5000);
         }
       } else {
         console.log("pass button pressed");
-        io.in(roomId).emit("turn_init", "pass");
+        io.in(roomId).emit("turn_init", `${roomData[roomId].whoseTurn} has chosen to pass!`);
         let userIndex = roomData[roomId].activePlayersArray.indexOf(userId);
         if (userIndex >= roomData[roomId].activePlayersArray.length - 1) {
           console.log(roomData[roomId].activePlayersArray);
