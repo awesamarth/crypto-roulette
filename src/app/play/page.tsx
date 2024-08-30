@@ -151,10 +151,10 @@ export default function Home() {
             <Physics>
               {playerPositions.map((position, index) => {
                 const playerId = roomData.playersArray[index];
-                console.log("player id here is: ", playerId);
-                console.log("user id here is: ", userId);
-                console.log("equality comparison: ", userId == playerId);
-                console.log("ye dekh, ", index, position);
+                // console.log("player id here is: ", playerId);
+                // console.log("user id here is: ", userId);
+                // console.log("equality comparison: ", userId == playerId);
+                // console.log("ye dekh, ", index, position);
 
                 return (
                   <Player

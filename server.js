@@ -1,7 +1,29 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
-import { NUM_PLAYERS, NUM_DETONATE_ALLERS } from "./src/constants/index.js"
+import { NUM_PLAYERS, NUM_DETONATE_ALLERS, ENTRY_FEE } from "./src/constants/index.js"
+import {
+  Account,
+  AccountAddress,
+  Aptos,
+  APTOS_COIN,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network,
+  NetworkToNetworkName,
+  StructTag,
+  TypeTagSigner,
+  TypeTagStruct,
+  
+  
+  
+} from "@aptos-labs/ts-sdk";
+
+
+
+
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -11,6 +33,24 @@ const port = 3000;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
+
+const privateKey= new Ed25519PrivateKey(process.env.PRIVATE_KEY)
+
+const account= Account.fromPrivateKey({privateKey})
+
+
+const config = new AptosConfig({
+  network: Network.CUSTOM,
+  fullnode: "https://aptos.testnet.suzuka.movementlabs.xyz/v1",
+  faucet: "https://faucet.testnet.suzuka.movementlabs.xyz",
+  indexer: "https://indexer.testnet.suzuka.movementlabs.xyz/v1/graphql",
+});
+
+const aptos = new Aptos(config);
+
+const TOTAL_POOL = NUM_PLAYERS * ENTRY_FEE
+
+
 app.prepare().then(() => {
   const httpServer = createServer(handler);
 
@@ -19,6 +59,9 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("a new person joined");
+
+
+
 
     console.log("Socket ID:", socket.id);
 
@@ -35,6 +78,26 @@ app.prepare().then(() => {
       console.log("all elements at this point are:", array);
       return randomElements;
     }
+
+   async function tokenDistributor(winnersArray){
+      
+      const recipients = winnersArray
+      const transactions = [];
+      const tokensToEach = TOTAL_POOL/recipients.length
+ 
+      for (let i = 0; i < recipients.length; i += 1) {
+          const transaction = {
+              function: "0x1::aptos_account::transfer",
+              functionArguments: [recipients[i].accountAddress, tokensToEach],
+          };
+          transactions.push(transaction);
+      }
+
+       await aptos.transaction.batch.forSingleAccount({ sender: account, data: transactions });
+
+    }
+
+    
 
     function isDetonateAller(player, roomId) {
       console.log(roomData[roomId].detonateAllerArray);
@@ -113,11 +176,12 @@ app.prepare().then(() => {
           console.log("detonate all others");
           setTimeout(() => {
             io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated everyone else!` );
-
+            roomData[roomId].activePlayersArray = [userId];
+            roomData[roomId].gameStatus = "ended";
+            tokenDistributor([userId])
+            roomData[roomId].whoseTurn=""
           }, 2000);
-          roomData[roomId].activePlayersArray = [userId];
-          roomData[roomId].gameStatus = "ended";
-          roomData[roomId].whoseTurn=""
+
           setTimeout(() => {
             io.in(roomId).emit("turn_processed", roomData[roomId]);
           }, 5000);
@@ -126,15 +190,14 @@ app.prepare().then(() => {
 
           setTimeout(() => {
             io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated themself!` );
-
+            roomData[roomId].activePlayersArray = roomData[
+              roomId
+            ].activePlayersArray.filter((player) => player != userId);
+            roomData[roomId].gameStatus = "ended";
+            roomData[roomId].whoseTurn=""
           }, 2000);
           
-          //last player in the array
-          roomData[roomId].activePlayersArray = roomData[
-            roomId
-          ].activePlayersArray.filter((player) => player != userId);
-          roomData[roomId].gameStatus = "ended";
-          roomData[roomId].whoseTurn=""
+
 
 
           //ending the game at this point.

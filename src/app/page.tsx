@@ -11,6 +11,7 @@ const bitFont = Press_Start_2P({ subsets: ["latin"], weight: ["400"] });
 const modernFont = Orbitron({ subsets: ["latin"], weight: ["400", "700"] });
 
 export default function Home() {
+  
   const wallet = useAptosWallet()
 
   

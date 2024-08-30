@@ -4,6 +4,7 @@ import { Vector3, Quaternion } from 'three';
 import { useCompoundBody } from '@react-three/cannon';
 import { PointerLockControls } from '@react-three/drei';
 import * as THREE from "three"
+import { NUM_PLAYERS } from '@/constants';
 
 const CAMERA_DISTANCE = 5;
 const CAMERA_HEIGHT = 2;
@@ -22,14 +23,16 @@ export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerI
     ],
   }));
 
-  console.log("the user id is: ", userId)
-  console.log("isme? ", isMe)
-  const [initialCameraRotation, setInitialCameraRotation] = useState(new Quaternion());
+  // console.log("the user id is: ", userId)
+  // console.log("isme? ", isMe)
+  // const [initialCameraRotation, setInitialCameraRotation] = useState(new Quaternion());
   const controlsRef = useRef();
   const initialRotationSet = useRef(false);
 
   useEffect(() => {
+    
     if (isMe && !initialRotationSet.current) {
+      // console.log("this happened right here")
       const angle = (playerIndex / playerCount) * Math.PI * 2;
       const initialPosition = new Vector3(
         TABLE_RADIUS * Math.cos(angle),
@@ -39,11 +42,27 @@ export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerI
       const lookAtCenter = new Quaternion().setFromRotationMatrix(
         new THREE.Matrix4().lookAt(initialPosition, new Vector3(0, 1, 0), new Vector3(0, 1, 0))
       );
-      setInitialCameraRotation(lookAtCenter);
+      // setInitialCameraRotation(lookAtCenter);
       camera.quaternion.copy(lookAtCenter);
+      
+
       initialRotationSet.current = true;
     }
-  }, [isMe, playerIndex, playerCount, camera]);
+
+    if (isMe && playerCount==NUM_PLAYERS){
+      const angle = (playerIndex / playerCount) * Math.PI * 2;
+      const initialPosition = new Vector3(
+        TABLE_RADIUS * Math.cos(angle),
+        CAMERA_HEIGHT,
+        TABLE_RADIUS * Math.sin(angle)
+      );
+      const lookAtCenter = new Quaternion().setFromRotationMatrix(
+        new THREE.Matrix4().lookAt(initialPosition, new Vector3(0, 1, 0), new Vector3(0, 1, 0))
+      );
+      // setInitialCameraRotation(lookAtCenter);
+      camera.quaternion.copy(lookAtCenter);
+    }
+  }, [isMe, playerIndex, playerCount]);
 
   useEffect(() => {
     const angle = (playerIndex / playerCount) * Math.PI * 2;
@@ -82,11 +101,14 @@ export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerI
         // Use the current camera quaternion instead of the initial one
         cameraOffset.applyQuaternion(camera.quaternion);
         camera.position.copy(playerPosition).add(cameraOffset);
-        // Remove this line to allow PointerLockControls to work
-        // camera.quaternion.copy(initialCameraRotation);
+
       }
     }
   });
+
+  useEffect(()=>{
+    console.log("re rendered")
+  },[])
 
   return (
     <>
