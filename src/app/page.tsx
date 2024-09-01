@@ -16,7 +16,7 @@ const bitFont = Press_Start_2P({
   weight: ["400"],
   display: "block",
 });
-export const modernFont = Orbitron({
+const modernFont = Orbitron({
   subsets: ["latin"],
   weight: ["400", "700"],
   display: "block",

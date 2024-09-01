@@ -60,11 +60,6 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("a new person joined");
 
-
-
-
-    console.log("Socket ID:", socket.id);
-
     function randomElementsGetter(array) {
       let randomElements = [];
       let tempArray = [...array];
@@ -74,8 +69,6 @@ app.prepare().then(() => {
         tempArray.splice(randomIndex, 1);
       }
 
-      console.log(randomElements);
-      console.log("all elements at this point are:", array);
       return randomElements;
     }
 
@@ -84,14 +77,22 @@ app.prepare().then(() => {
       const recipients = winnersArray
       const transactions = [];
       const tokensToEach = TOTAL_POOL/recipients.length
+
+      console.log("tokens to each are:")
+
+      console.log("tokens should be given to: ")
+      console.log(recipients)
  
       for (let i = 0; i < recipients.length; i += 1) {
           const transaction = {
               function: "0x1::aptos_account::transfer",
-              functionArguments: [recipients[i].accountAddress, tokensToEach],
+              functionArguments: [recipients[i], tokensToEach],
           };
           transactions.push(transaction);
       }
+
+      console.log("transactions array: ")
+      console.log(transactions)
 
        await aptos.transaction.batch.forSingleAccount({ sender: account, data: transactions });
 
@@ -100,15 +101,12 @@ app.prepare().then(() => {
     
 
     function isDetonateAller(player, roomId) {
-      console.log(roomData[roomId].detonateAllerArray);
       return roomData[roomId].detonateAllerArray.includes(player);
     }
 
     //when all players pass and so x/n players get randoomly detonated.
     function detonateRandomPlayers(roomId) {
       //choose a random number between 0 and NUM_PLAYERS
-      console.log("room data here is")
-      console.log(roomData[roomId])
       
      const numPlayersToEliminate = Math.floor(Math.random() * NUM_PLAYERS) + 1;
       console.log(numPlayersToEliminate, " will be eliminated");
@@ -124,23 +122,20 @@ app.prepare().then(() => {
         );
 
         tempActivePlayersArray.splice(randomIndex, 1);
-        console.log("in loop it is ", randomIndex )
-        console.log(tempActivePlayersArray)
 
       }
-      console.log(tempActivePlayersArray)
       roomData[roomId].activePlayersArray=tempActivePlayersArray
-      console.log(roomData[roomId])
 
       setTimeout(() => {
         roomData[roomId].gameStatus = "ended";
         roomData[roomId].whoseTurn=""
-        // tokenDistributor(roomData[roomId].activePlayersArray)
+        tokenDistributor(roomData[roomId].activePlayersArray)
         io.in(roomId).emit("turn_processed", roomData[roomId]);
       }, 5500);
     }
 
     socket.on("join_room", ({ userId, roomId }) => {
+      console.log(userId, " joined")
       let clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
       if (clientsInRoom===NUM_PLAYERS) {
         return
@@ -163,13 +158,11 @@ app.prepare().then(() => {
 
 
       roomData[roomId] = roomDetails;
-      console.log(roomData);
+      // console.log(roomData);
       io.in(roomId).emit("player_joined", roomData[roomId]);
 
       clientsInRoom = io.sockets.adapter.rooms.get(roomId)?.size || 0;
-      console.log(`Number of clients in room ${roomId}: ${clientsInRoom}`);
       if (clientsInRoom == NUM_PLAYERS) {
-        console.log("here's playersArray ", roomData[roomId].playersArray);
         roomData[roomId].detonateAllerArray = randomElementsGetter(
           roomData[roomId].playersArray
         );
@@ -177,8 +170,6 @@ app.prepare().then(() => {
         roomData[roomId].whoseTurn = roomData[roomId].activePlayersArray[0];
         roomData[roomId].gameStatus="started"
 
-        console.log("people joined");
-        console.log(roomData[roomId]);
         io.in(roomId).emit("start_game", roomData[roomId]);
       }
     });
@@ -193,7 +184,7 @@ app.prepare().then(() => {
             io.in(roomId).emit("turn_consequence", {prevPlayer:roomData[roomId].whoseTurn, consequence:"everyone else"} );
             roomData[roomId].activePlayersArray = [userId];
             roomData[roomId].gameStatus = "ended";
-            // tokenDistributor([userId])
+            tokenDistributor([userId])
             roomData[roomId].whoseTurn=""
           }, 2000);
 
@@ -208,8 +199,7 @@ app.prepare().then(() => {
             roomData[roomId].activePlayersArray = roomData[
               roomId
             ].activePlayersArray.filter((player) => player != userId);
-            // tokenDistributor(roomData[roomId].activePlayersArray)
-            console.log(roomData[roomId].activePlayersArray, "it's here")
+            tokenDistributor(roomData[roomId].activePlayersArray)
             roomData[roomId].gameStatus = "ended";
             roomData[roomId].whoseTurn=""
           }, 2000);
@@ -229,9 +219,6 @@ app.prepare().then(() => {
         io.in(roomId).emit("turn_init", {prevPlayer:roomData[roomId].whoseTurn, decision:"pass"});
         let userIndex = roomData[roomId].activePlayersArray.indexOf(userId);
         if (userIndex >= roomData[roomId].activePlayersArray.length - 1) {
-          console.log(roomData[roomId].activePlayersArray);
-          console.log(userIndex);
-          console.log("chuda");
           setTimeout(() => {
             roomData[roomId].gameStatus = "randomly_detonating";
 
@@ -242,8 +229,6 @@ app.prepare().then(() => {
             
           }, 3000);
         } else {
-          console.log(userIndex);
-          console.log(roomData[roomId].activePlayersArray);
           roomData[roomId].whoseTurn =roomData[roomId].activePlayersArray[userIndex + 1];
           setTimeout(()=>{
             io.in(roomId).emit("turn_processed", roomData[roomId]);
@@ -253,7 +238,6 @@ app.prepare().then(() => {
     });
 
     socket.on("send_message", (data) => {
-      console.log(data);
       socket.to(data.roomId).emit("receive_message", data);
     });
 

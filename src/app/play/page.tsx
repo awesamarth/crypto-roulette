@@ -8,22 +8,26 @@ import { Player } from "@/components/Player";
 import { useEffect, useRef, useState } from "react";
 import { socket } from "@/socket";
 import { Text } from "@react-three/drei";
-import { ENTRY_FEE, NUM_PLAYERS } from "@/constants";
+import { ENTRY_FEE, ENTRY_FEE_WITH_ZEROS, NUM_PLAYERS } from "@/constants";
 import { Table } from "@/components/Table";
 import { useAptosWallet } from "@razorlabs/wallet-kit";
 import { abbreviateAddress } from "@/utils";
-import { Press_Start_2P } from "next/font/google";
+import { Press_Start_2P, Orbitron } from "next/font/google";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { modernFont } from "../page";
+
+const modernFont = Orbitron({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "block",
+});
 
 const bitFont = Press_Start_2P({ subsets: ["latin"], weight: ["400"] });
 
 export default function Home() {
-  const PLAYER_COUNT = 8;
   const TABLE_RADIUS = 8;
 
   const [roomConnected, setRoomConnected] = useState(false);
-  const [userId, setUserId] = useState("");
+  // const [userId, setUserId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [gameStarted, setGameStarted] = useState(false);
   const [roomData, setRoomData] = useState({} as any);
@@ -35,14 +39,14 @@ export default function Home() {
   const [numPlayersToEliminate, setNumPlayersToEliminate] = useState();
 
   const remoteRefs = useRef([]); // Reference for the remote
-  // const userId = useAptosWallet().address;
+  const userId = useAptosWallet().address;
   const { address, account, signAndSubmitTransaction } = useAptosWallet();
 
-  //1 MOVE
-  const TRANSFER_AMOUNT = 100000000;
+  //1 MOVE 
   const gameFundAddress =
-    "0x851cfbe389013be02c0c7ecec6f05459be7be20681a311ed96fbff45f2a81c14";
+    "0xb36ad41b9e9f33a62ea487f50b75bc1f9e169e40c1d3a6c5672a04248e68702d";
   type Coin = { coin: { value: string } };
+
 
   // Setup the client
   const config = new AptosConfig({
@@ -56,22 +60,17 @@ export default function Home() {
 
   useEffect(() => {
     const startGame = (data: any) => {
-      console.log("time to start the game");
 
-      // console.log(data);
       setGameStarted(true);
       setRoomData(data);
     };
 
     const turnProcessed = (data: any) => {
-      // console.log(data);
       setDecision(null);
       setMessage(null);
       setConsequence(null);
       setRoomData(data);
 
-      console.log("turn processed");
-      console.log(data);
     };
 
     const numDecided = (data: any) => {
@@ -87,21 +86,18 @@ export default function Home() {
     };
 
     const turnInit = (data: any) => {
-      console.log("turn init data ", data);
 
       setDecision(data.decision);
       setPrevPlayer(data.prevPlayer);
     };
 
     const turnConsequence = (data: any) => {
-      console.log("turn consequence data ", data);
       setDecision(null);
       setPrevPlayer(data.prevPlayer);
       setConsequence(data.consequence);
     };
 
     const numStarted = (data: any) => {
-      console.log("random detonation started", data);
       setRandomDetonation(true);
     };
 
@@ -121,38 +117,34 @@ export default function Home() {
   }, []);
 
   const detonateClicked = async () => {
-    console.log("detonate button pushed");
     socket.emit("turn_played", { choice: "detonate", userId, roomId });
   };
 
   const passClicked = async () => {
-    console.log("pass button pushed");
     socket.emit("turn_played", { choice: "pass", userId, roomId });
   };
 
   const joinClicked = async () => {
     if (userId && roomId) {
-      // try {
-      //   const pendingTxn = await signAndSubmitTransaction({
-      //     // transaction
+      try {
+        const pendingTxn = await signAndSubmitTransaction({
+          // transaction
 
-      //     payload: {
-      //       function: "0x1::aptos_account::transfer",
-      //       functionArguments: [gameFundAddress, TRANSFER_AMOUNT],
-      //     },
-      //   });
+          payload: {
+            function: "0x1::aptos_account::transfer",
+            functionArguments: [gameFundAddress, ENTRY_FEE_WITH_ZEROS],
+          },
+        });
 
-      //   if (pendingTxn.status === "Approved") {
-      //     socket.emit("join_room", { userId, roomId });
-      //     setRoomConnected(true);
-      //   } else {
-      //   }
-      // } catch (error) {
-      //   alert("Transaction failed, please try again");
-      // }
+        if (pendingTxn.status === "Approved") {
+          socket.emit("join_room", { userId, roomId });
+          setRoomConnected(true);
+        } else {
+        }
+      } catch (error) {
+        alert("Transaction failed, please try again");
+      }
 
-      socket.emit("join_room", { userId, roomId });
-      setRoomConnected(true);
     }
   };
 
@@ -236,7 +228,7 @@ export default function Home() {
           ) : decision ? (
             <div className="absolute  bg-yellow-700 px-10 py-3 w-max rounded-md top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col justify-center items-center">
               <div className={`${bitFont.className}`}>
-                {prevPlayer === userId ? "you have" : `${prevPlayer} has`}{" "}
+                {prevPlayer === userId ? "you have" : `${abbreviateAddress(prevPlayer)} has`}{" "}
                 chosen to {decision}!
               </div>
             </div>
@@ -249,7 +241,7 @@ export default function Home() {
                         ? "yourself!"
                         : "everyone else!"
                     }`
-                  : `${prevPlayer} detonated ${consequence}!`}
+                  : `${abbreviateAddress(prevPlayer)} detonated ${consequence}!`}
               </div>
             </div>
           ) : (
@@ -271,7 +263,7 @@ export default function Home() {
               Join a Room
             </h2>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <label
                 htmlFor="userId"
                 className="block text-sm font-medium text-gray-400 mb-2"
@@ -281,16 +273,16 @@ export default function Home() {
               <input
                 id="userId"
                 type="text"
-                className="w-full px-3 py-2 bg-gray-500 text-gray-300 rounded border border-gray-600 focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
-                // value={abbreviateAddress(userId ? userId : "")}
-                value={userId}
-                disabled={false}
-                onChange={(event) => setUserId(event.target.value)}
+                className="w-full px-3 py-2 bg-gray-500 cursor-not-allowed text-gray-200 rounded border border-gray-600 focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
+                value={abbreviateAddress(userId ? userId : "")}
+                // value={userId}
+                disabled={true}
+                // onChange={(event) => setUserId(event.target.value)}
                 placeholder="Connected Wallet Address"
               />
-            </div>
+            </div> */}
 
-            <div className="mb-6">
+            <div className="mb-9 mt-9">
               <label
                 htmlFor="roomId"
                 className="block text-sm font-medium text-gray-400 mb-2"
@@ -343,7 +335,7 @@ export default function Home() {
       {roomData.gameStatus === "ended" ? (
         <div className="absolute  px-10 py-3 w-[40rem] rounded-md top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col justify-center items-center">
           <div className="bg-yellow-700 rounded-md px-10 py-3 ">
-            <h1 className={`text-4xl ${bitFont.className}`}>Game Over</h1>
+            <h1 className={`text-4xl text-center ${bitFont.className}`}>Game Over</h1>
             {roomData.activePlayersArray.length > 0 ? (
               <div className="flex flex-col justify-center  items-center">
                 <h2 className={`text-3xl mt-4 mb-3 ${modernFont.className}`}>
@@ -360,7 +352,7 @@ export default function Home() {
                       }`}
                       key={winner}
                     >
-                      {winner}
+                      {abbreviateAddress(winner)}
                     </div>
                   ))}
                 </div>
@@ -395,8 +387,7 @@ export default function Home() {
           )}
             <button
               className={`${bitFont.className} mt-4 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105`}
-              onClick={joinClicked}
-            >
+              onClick={()=>document.location.href=("/play")}            >
               Play Again
             </button>        </div>
       ) : (

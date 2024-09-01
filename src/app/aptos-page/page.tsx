@@ -17,7 +17,7 @@ import { useAptosWallet } from "@razorlabs/wallet-kit";
 
 // 100 MOVE
 const TRANSFER_AMOUNT = 10000000000;
-const gameFundAddress="0x851cfbe389013be02c0c7ecec6f05459be7be20681a311ed96fbff45f2a81c14"
+const gameFundAddress="0xb36ad41b9e9f33a62ea487f50b75bc1f9e169e40c1d3a6c5672a04248e68702d"
 type Coin = { coin: { value: string } };
 
 
