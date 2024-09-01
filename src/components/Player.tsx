@@ -15,7 +15,7 @@ export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerI
   const { camera } = useThree();
   const [ref, api] = useCompoundBody(() => ({
     mass: 2,
-    type: 'Dynamic',
+    type: 'Static',
     position: position,
     shapes: [
       { type: 'Cylinder', position: [0, 0, 0], args: [0.5, 0.5, 2] },

@@ -4,31 +4,51 @@ import Image from "next/image";
 import Link from "next/link";
 import { NUM_PLAYERS, NUM_DETONATE_ALLERS } from "@/constants";
 import { Press_Start_2P, Orbitron } from "next/font/google";
-import {useStore} from "@/hooks/useStore"
-import { AptosConnectButton, AptosWalletProvider, useAptosWallet } from "@razorlabs/wallet-kit";
+import { useStore } from "@/hooks/useStore";
+import {
+  AptosConnectButton,
+  AptosWalletProvider,
+  useAptosWallet,
+} from "@razorlabs/wallet-kit";
 
-const bitFont = Press_Start_2P({ subsets: ["latin"], weight: ["400"] });
-const modernFont = Orbitron({ subsets: ["latin"], weight: ["400", "700"] });
+const bitFont = Press_Start_2P({
+  subsets: ["latin"],
+  weight: ["400"],
+  display: "block",
+});
+export const modernFont = Orbitron({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "block",
+});
 
 export default function Home() {
-  
-  const wallet = useAptosWallet()
+  const wallet = useAptosWallet();
 
-  
-  console.log(wallet.address)
+  console.log(wallet.address);
 
-  const setUsername = useStore((state)=>state?.setUserName)
-  if(wallet){
-    setUsername(wallet.address)
+  const setUsername = useStore((state) => state?.setUserName);
+  if (wallet) {
+    setUsername(wallet.address);
   }
 
-
-
-  
-
-
   return (
-    <div className={`${modernFont.className} text-white`}>
+    <div className={`${bitFont.className} text-white`}>
+      <div className=" justify-end absolute top-0 h-14  z-20 w-full flex">
+        <div
+          className={`${bitFont.className}  flex-col items-center flex justify-center mr-4 mt-1`}
+        >
+          <div className=" bg-yellow-500  hover:bg-yellow-600    rounded-2xl shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform  text-xl">
+            <AptosConnectButton
+              className={`   border-2 border-white  ${bitFont.className} `}
+            >
+              <span className=" text-black hover:text-white  transition-colors">
+                Connect Wallet
+              </span>
+            </AptosConnectButton>
+          </div>
+        </div>
+      </div>
       {/* Initial view */}
       <section className="h-screen flex flex-col items-center justify-center gap-4 relative">
         <Image
@@ -51,14 +71,16 @@ export default function Home() {
           </p>
           <div></div>
 
-          <div
-            className={`${bitFont.className}  flex justify-center`}
-          >
-            <div className=" bg-red-700 hover:bg-red-600 text-white px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 text-xl">
-            <AptosConnectButton className={`  w-96   ${bitFont.className}  text-white`}>
-              <span className="text-white">Connect Wallet</span>
-            </AptosConnectButton>
-            </div>
+          <div className={`${bitFont.className}  flex flex-col items-center gap-3 justify-center`}>
+            <button
+              disabled={!wallet.connected}
+              onClick={()=>document.location.href=("/play")}
+              title={!wallet.connected?"Please connect your wallet":""}
+              className={`hover:cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-600  bg-red-700 px-20 py-5 hover:bg-red-600 text-white   rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 text-xl`}
+            >
+              Start
+            </button>
+            <div className={`${modernFont.className} tracking-wide`}>{!wallet.connected?"Please connect your wallet":""} </div>
           </div>
         </div>
         <div className="absolute bottom-8 text-center w-full animate-bounce">
@@ -74,7 +96,7 @@ export default function Home() {
           layout="fill"
           objectFit="cover"
           quality={100}
-          className= " bg-cover contrast-150 brightness-50"
+          className=" bg-cover contrast-150 brightness-50"
           alt="Crypto Roulette rules background"
         />
         <div className="container mx-auto px-4 relative z-10">

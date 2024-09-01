@@ -77,11 +77,7 @@ export const Remote = forwardRef(({
             <cylinderGeometry args={[0.03, 0.03, 0.01, 16]} />
             <meshStandardMaterial color={hovered === 'detonate' && isActive ? "red" : "darkred"} />
           </mesh>
-          <group ref={detonateTextRef}>
-            <Text position={[0, 0.02, 0]} fontSize={0.02} color="white" anchorX="center" anchorY="middle">
-              Detonate
-            </Text>
-          </group>
+
         </group>
 
         {/* Pass Button */}
@@ -94,11 +90,7 @@ export const Remote = forwardRef(({
             <cylinderGeometry args={[0.03, 0.03, 0.01, 16]} />
             <meshStandardMaterial color={hovered === 'pass' && isActive ? "green" : "darkgreen"} />
           </mesh>
-          <group ref={passTextRef}>
-            <Text position={[0, 0.02, 0]} fontSize={0.02} color="white" anchorX="center" anchorY="middle">
-              Pass
-            </Text>
-          </group>
+
         </group>
       </group>
     </group>

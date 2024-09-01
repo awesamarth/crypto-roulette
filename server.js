@@ -107,22 +107,37 @@ app.prepare().then(() => {
     //when all players pass and so x/n players get randoomly detonated.
     function detonateRandomPlayers(roomId) {
       //choose a random number between 0 and NUM_PLAYERS
-      const numPlayersToEliminate = Math.floor(Math.random() * NUM_PLAYERS) + 1;
+      console.log("room data here is")
+      console.log(roomData[roomId])
+      
+     const numPlayersToEliminate = Math.floor(Math.random() * NUM_PLAYERS) + 1;
       console.log(numPlayersToEliminate, " will be eliminated");
-      io.in(roomId).emit("num_decided", numPlayersToEliminate);
+
+      setTimeout(() => {
+        io.in(roomId).emit("num_decided", numPlayersToEliminate);
+        
+      }, 2000);
+      const tempActivePlayersArray = [...roomData[roomId].activePlayersArray]
       for (let i = 0; i < numPlayersToEliminate; i++) {
         let randomIndex = Math.floor(
-          Math.random() * roomData[roomId].activePlayersArray.length
+          Math.random() * tempActivePlayersArray.length
         );
-        roomData[roomId].activePlayersArray.splice(randomIndex, 1);
+
+        tempActivePlayersArray.splice(randomIndex, 1);
+        console.log("in loop it is ", randomIndex )
+        console.log(tempActivePlayersArray)
+
       }
+      console.log(tempActivePlayersArray)
+      roomData[roomId].activePlayersArray=tempActivePlayersArray
+      console.log(roomData[roomId])
 
       setTimeout(() => {
         roomData[roomId].gameStatus = "ended";
         roomData[roomId].whoseTurn=""
-
+        // tokenDistributor(roomData[roomId].activePlayersArray)
         io.in(roomId).emit("turn_processed", roomData[roomId]);
-      }, 3500);
+      }, 5500);
     }
 
     socket.on("join_room", ({ userId, roomId }) => {
@@ -170,15 +185,15 @@ app.prepare().then(() => {
 
     socket.on("turn_played", ({ choice, userId, roomId }) => {
       if (choice === "detonate") {
-        io.in(roomId).emit("turn_init", `${roomData[roomId].whoseTurn} has chosen to detonate!`);
+        io.in(roomId).emit("turn_init", {prevPlayer:roomData[roomId].whoseTurn, decision:"detonate"});
 
         if (isDetonateAller(userId, roomId)) {
           console.log("detonate all others");
           setTimeout(() => {
-            io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated everyone else!` );
+            io.in(roomId).emit("turn_consequence", {prevPlayer:roomData[roomId].whoseTurn, consequence:"everyone else"} );
             roomData[roomId].activePlayersArray = [userId];
             roomData[roomId].gameStatus = "ended";
-            tokenDistributor([userId])
+            // tokenDistributor([userId])
             roomData[roomId].whoseTurn=""
           }, 2000);
 
@@ -189,10 +204,12 @@ app.prepare().then(() => {
           console.log("self detonate pushed");
 
           setTimeout(() => {
-            io.in(roomId).emit("turn_consequence", `${roomData[roomId].whoseTurn} detonated themself!` );
+            io.in(roomId).emit("turn_consequence",{prevPlayer:roomData[roomId].whoseTurn, consequence:"themself"}  );
             roomData[roomId].activePlayersArray = roomData[
               roomId
             ].activePlayersArray.filter((player) => player != userId);
+            // tokenDistributor(roomData[roomId].activePlayersArray)
+            console.log(roomData[roomId].activePlayersArray, "it's here")
             roomData[roomId].gameStatus = "ended";
             roomData[roomId].whoseTurn=""
           }, 2000);
@@ -209,7 +226,7 @@ app.prepare().then(() => {
         }
       } else {
         console.log("pass button pressed");
-        io.in(roomId).emit("turn_init", `${roomData[roomId].whoseTurn} has chosen to pass!`);
+        io.in(roomId).emit("turn_init", {prevPlayer:roomData[roomId].whoseTurn, decision:"pass"});
         let userIndex = roomData[roomId].activePlayersArray.indexOf(userId);
         if (userIndex >= roomData[roomId].activePlayersArray.length - 1) {
           console.log(roomData[roomId].activePlayersArray);
@@ -217,12 +234,14 @@ app.prepare().then(() => {
           console.log("chuda");
           setTimeout(() => {
             roomData[roomId].gameStatus = "randomly_detonating";
+
             io.in(roomId).emit("turn_processed", roomData[roomId]);
+            io.in(roomId).emit("randomly_detonating_broadcast", roomData[roomId])
+
             detonateRandomPlayers(roomId);
             
           }, 3000);
         } else {
-          console.log("going here");
           console.log(userIndex);
           console.log(roomData[roomId].activePlayersArray);
           roomData[roomId].whoseTurn =roomData[roomId].activePlayersArray[userIndex + 1];
