@@ -11,7 +11,7 @@ const CAMERA_HEIGHT = 2;
 const HEAD_OFFSET = 0.4;
 const TABLE_RADIUS = 8; 
 
-export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerIndex }: { whoseTurn: any, userId: any, position: any, isMe: boolean, remoteRef: any, playerCount: number, playerIndex: number }) => {
+export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerIndex, controlsRef }: { whoseTurn: any, userId: any, position: any, isMe: boolean, remoteRef: any, playerCount: number, playerIndex: number, controlsRef:any }) => {
   const { camera } = useThree();
   const [ref, api] = useCompoundBody(() => ({
     mass: 2,
@@ -26,7 +26,7 @@ export const Player = ({ userId, whoseTurn, position, isMe, playerCount, playerI
   // console.log("the user id is: ", userId)
   // console.log("isme? ", isMe)
   // const [initialCameraRotation, setInitialCameraRotation] = useState(new Quaternion());
-  const controlsRef = useRef();
+  // const controlsRef = useRef();
   const initialRotationSet = useRef(false);
 
   useEffect(() => {

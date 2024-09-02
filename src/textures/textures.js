@@ -3,6 +3,8 @@
 import { NearestFilter, TextureLoader, RepeatWrapping } from "three";
 let floorTexture
 let wallTexture
+let ceilingTexture
+let tableTexture
 if (typeof window !== "undefined") {
     // Only load textures if we're in a browser environment
     const loader = new TextureLoader();
@@ -19,8 +21,23 @@ if (typeof window !== "undefined") {
     wallTexture.magFilter = NearestFilter
     wallTexture.wrapS = RepeatWrapping
     wallTexture.wrapT = RepeatWrapping
+
+    ceilingTexture=loader.load("/ceiling.png")
+    ceilingTexture.magFilter = NearestFilter
+    ceilingTexture.wrapS = RepeatWrapping
+    ceilingTexture.wrapT = RepeatWrapping
+
+    tableTexture = loader.load("/table.png")
+    // tableTexture.magFilter = NearestFilter
+
+
+
+
+
+
+    
   }
 
   
 
-  export { floorTexture, wallTexture };
+  export { floorTexture, wallTexture, ceilingTexture, tableTexture };

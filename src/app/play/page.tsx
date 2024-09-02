@@ -5,7 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/cannon";
 import { Environment } from "@/components/Environment";
 import { Player } from "@/components/Player";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { socket } from "@/socket";
 import { Text } from "@react-three/drei";
 import { ENTRY_FEE, ENTRY_FEE_WITH_ZEROS, NUM_PLAYERS } from "@/constants";
@@ -37,16 +37,16 @@ export default function Home() {
   const [prevPlayer, setPrevPlayer] = useState();
   const [randomDetonation, setRandomDetonation] = useState(false);
   const [numPlayersToEliminate, setNumPlayersToEliminate] = useState();
+  const [isCopied, setIsCopied] = useState(false);
 
   const remoteRefs = useRef([]); // Reference for the remote
   const userId = useAptosWallet().address;
   const { address, account, signAndSubmitTransaction } = useAptosWallet();
 
-  //1 MOVE 
+  //1 MOVE
   const gameFundAddress =
-    "0xb36ad41b9e9f33a62ea487f50b75bc1f9e169e40c1d3a6c5672a04248e68702d";
+    "0x851cfbe389013be02c0c7ecec6f05459be7be20681a311ed96fbff45f2a81c14";
   type Coin = { coin: { value: string } };
-
 
   // Setup the client
   const config = new AptosConfig({
@@ -55,12 +55,37 @@ export default function Home() {
     faucet: "https://faucet.testnet.suzuka.movementlabs.xyz",
     indexer: "https://indexer.testnet.suzuka.movementlabs.xyz/v1/graphql",
   });
+  const controlsRef = useRef();
 
+  const handleUnlock = useCallback(() => {
+    if (controlsRef.current) {
+      //@ts-ignore
+      controlsRef.current.unlock();
+    }
+  }, []);
+
+  const copyToClipboard = useCallback(
+    (event: any) => {
+      event.preventDefault();
+      event.stopPropagation();
+      handleUnlock();
+      navigator.clipboard.writeText(roomId).then(
+        () => {
+          console.log("Room ID copied to clipboard");
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+        },
+        (err) => {
+          console.error("Could not copy text: ", err);
+        }
+      );
+    },
+    [roomId, handleUnlock]
+  );
   const movement = new Aptos(config);
 
   useEffect(() => {
     const startGame = (data: any) => {
-
       setGameStarted(true);
       setRoomData(data);
     };
@@ -70,7 +95,6 @@ export default function Home() {
       setMessage(null);
       setConsequence(null);
       setRoomData(data);
-
     };
 
     const numDecided = (data: any) => {
@@ -86,7 +110,6 @@ export default function Home() {
     };
 
     const turnInit = (data: any) => {
-
       setDecision(data.decision);
       setPrevPlayer(data.prevPlayer);
     };
@@ -137,14 +160,12 @@ export default function Home() {
         });
 
         if (pendingTxn.status === "Approved") {
-          socket.emit("join_room", { userId, roomId });
-          setRoomConnected(true);
-        } else {
+        socket.emit("join_room", { userId, roomId });
+        setRoomConnected(true);
         }
       } catch (error) {
         alert("Transaction failed, please try again");
       }
-
     }
   };
 
@@ -166,7 +187,7 @@ export default function Home() {
         <div className="h-screen w-full">
           {roomData.gameStatus === "waiting" && (
             <div
-              className={`${modernFont.className} text-xl tracking-wide absolute z-20 left-4 top-4`}
+              className={`${modernFont.className} text-xl tracking-wide absolute z-[100] left-4 top-4`}
             >
               Waiting for {NUM_PLAYERS - roomData.playersArray.length} more
               player{NUM_PLAYERS - roomData.playersArray.length < 2 ? "" : "s"}{" "}
@@ -175,7 +196,7 @@ export default function Home() {
           )}
 
           <Canvas className="">
-            <ambientLight intensity={2} />
+            <ambientLight intensity={1} />
             <Physics>
               {playerPositions.map((position, index) => {
                 const playerId = roomData.playersArray[index];
@@ -194,6 +215,7 @@ export default function Home() {
                     remoteRef={remoteRefs.current[playerId]}
                     playerCount={roomData.playersArray.length}
                     playerIndex={index}
+                    controlsRef={controlsRef}
                   />
                 );
               })}
@@ -208,6 +230,56 @@ export default function Home() {
               />
             </Physics>
           </Canvas>
+          <div
+            className={`${modernFont.className} text-xl tracking-wide absolute z-[2000] right-4 top-4 flex items-center`}
+            style={{ pointerEvents: "none" }}
+          >
+            <span>Room ID: {roomId}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(e);
+              }}
+              className={`ml-2 p-1 ${
+                isCopied ? "bg-green-600" : "bg-gray-700 hover:bg-gray-600"
+              } rounded transition-colors duration-300`}
+              title={isCopied ? "Copied!" : "Copy Room ID"}
+              style={{ pointerEvents: "auto" }}
+            >
+              {isCopied ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+
           {randomDetonation && roomData.gameStatus !== "ended" ? (
             <div className="absolute  bg-yellow-700 px-10 py-3 w-[30rem] rounded-md top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col justify-center items-center">
               <div
@@ -228,7 +300,9 @@ export default function Home() {
           ) : decision ? (
             <div className="absolute  bg-yellow-700 px-10 py-3 w-max rounded-md top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col justify-center items-center">
               <div className={`${bitFont.className}`}>
-                {prevPlayer === userId ? "you have" : `${abbreviateAddress(prevPlayer)} has`}{" "}
+                {prevPlayer === userId
+                  ? "you have"
+                  : `${abbreviateAddress(prevPlayer)} has`}{" "}
                 chosen to {decision}!
               </div>
             </div>
@@ -241,7 +315,9 @@ export default function Home() {
                         ? "yourself!"
                         : "everyone else!"
                     }`
-                  : `${abbreviateAddress(prevPlayer)} detonated ${consequence}!`}
+                  : `${abbreviateAddress(
+                      prevPlayer
+                    )} detonated ${consequence}!`}
               </div>
             </div>
           ) : (
@@ -335,7 +411,9 @@ export default function Home() {
       {roomData.gameStatus === "ended" ? (
         <div className="absolute  px-10 py-3 w-[40rem] rounded-md top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col justify-center items-center">
           <div className="bg-yellow-700 rounded-md px-10 py-3 ">
-            <h1 className={`text-4xl text-center ${bitFont.className}`}>Game Over</h1>
+            <h1 className={`text-4xl text-center ${bitFont.className}`}>
+              Game Over
+            </h1>
             {roomData.activePlayersArray.length > 0 ? (
               <div className="flex flex-col justify-center  items-center">
                 <h2 className={`text-3xl mt-4 mb-3 ${modernFont.className}`}>
@@ -368,28 +446,28 @@ export default function Home() {
               </div>
             )}
           </div>
-
           {roomData.activePlayersArray.includes(userId) && (
             <div
               className={`mt-2 text-xl rounded-lg w-[30rem] text-center  justify-center text-black tracking-wider bg-white ${modernFont.className}`}
             >
-              Congratulations, you won! {" "}
+              Congratulations, you won!{" "}
               <span className=" font-bold">
                 {(
-                  (NUM_PLAYERS * ENTRY_FEE) /
+                  ((95 / 100) * NUM_PLAYERS * ENTRY_FEE) /
                   roomData.activePlayersArray.length
                 ).toFixed(2)}{" "}
                 MOVE
               </span>{" "}
               has been deposited into your wallet!
             </div>
-            
           )}
-            <button
-              className={`${bitFont.className} mt-4 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105`}
-              onClick={()=>document.location.href=("/play")}            >
-              Play Again
-            </button>        </div>
+          <button
+            className={`${bitFont.className} mt-4 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105`}
+            onClick={() => (document.location.href = "/play")}
+          >
+            Play Again
+          </button>{" "}
+        </div>
       ) : (
         ""
       )}

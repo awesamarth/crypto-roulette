@@ -92,7 +92,7 @@ export default function Home() {
       {/* Rules and additional information */}
       <section className="min-h-screen py-16 relative">
         <Image
-          src="/image.png"
+          src="/backg2.png"
           layout="fill"
           objectFit="cover"
           quality={100}

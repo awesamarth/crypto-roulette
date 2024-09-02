@@ -1,6 +1,11 @@
+
 import { useCylinder } from "@react-three/cannon";
 import { useMemo, useRef } from "react";
 import { Remote } from "./Remote";
+//@ts-ignore
+import { tableTexture } from "@/textures/textures";
+import { Color } from 'three'
+
 export const Table = ({
   radius,
   playerCount,
@@ -72,24 +77,30 @@ export const Table = ({
       return [0, -angle + Math.PI, 0] as [number, number, number];
     });
   }, [playersArray]);
+  
+  const hueShift = new Color(2.1, 0.8, 0.65)
+
 
   return (
     <group>
       {/* Circular Tabletop */}
       <mesh ref={topRef}>
+        
         <cylinderGeometry args={[radius, radius, 0.2, 32]} />
-        <meshStandardMaterial color="#663300" />
-        <ambientLight intensity={0.3} />
+        {/* @ts-ignore */}
+        <meshStandardMaterial attach="material" map={tableTexture} color={hueShift}  />
+        <ambientLight intensity={1}  />
       </mesh>
 
       {/* Legs */}
       {legPositions.map((position, index) => (
         <mesh key={index} position={position}>
           <cylinderGeometry args={[legRadius, legRadius, legHeight, 32]} />
-          <meshStandardMaterial color="#4D2600" />
-        </mesh>
+          {/* @ts-ignore */}
+          <meshStandardMaterial attach="material" map={tableTexture} color={hueShift} />
+          </mesh>
       ))}
-{playersArray.map((playerId, index) => {
+      {playersArray.map((playerId, index) => {
         const isActive = playerId === whoseTurn;
         const position = remotePositions[index];
         const rotation = remoteRotations[index];
