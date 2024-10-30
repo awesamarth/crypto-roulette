@@ -75,12 +75,12 @@ export default function Home() {
             <button
               disabled={!wallet.connected}
               onClick={()=>document.location.href=("/play")}
-              title={!wallet.connected?"Please connect your wallet":""}
+              title={!wallet.connected?"Please connect your Movement wallet":""}
               className={`hover:cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-600  bg-red-700 px-20 py-5 hover:bg-red-600 text-white   rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 text-xl`}
             >
               Start
             </button>
-            <div className={`${modernFont.className} tracking-wide`}>{!wallet.connected?"Please connect your wallet":""} </div>
+            <div className={`${modernFont.className} tracking-wide`}>{!wallet.connected?"Please connect your Movement wallet":""} </div>
           </div>
         </div>
         <div className="absolute bottom-8 text-center w-full animate-bounce">
