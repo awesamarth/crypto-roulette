@@ -1,16 +1,9 @@
 "use client";
 import {
-  Account,
   AccountAddress,
   Aptos,
-  APTOS_COIN,
   AptosConfig,
   Network,
-  NetworkToNetworkName,
-  StructTag,
-  TypeTagSigner,
-  TypeTagStruct,
-  
   
 } from "@aptos-labs/ts-sdk";
 import { useAptosWallet } from "@razorlabs/wallet-kit";
@@ -24,9 +17,9 @@ type Coin = { coin: { value: string } };
 // Setup the client
 const config = new AptosConfig({
   network: Network.CUSTOM,
-  fullnode: "https://aptos.testnet.suzuka.movementlabs.xyz/v1",
-  faucet: "https://faucet.testnet.suzuka.movementlabs.xyz",
-  indexer: "https://indexer.testnet.suzuka.movementlabs.xyz/v1/graphql",
+  fullnode: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+  faucet: 'https://fund.testnet.porto.movementlabs.xyz/',
+  indexer: "https://indexer.testnet.porto.movementnetwork.xyz/v1/graphql",
 });
 
 

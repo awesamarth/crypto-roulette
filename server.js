@@ -37,9 +37,9 @@ const account = Account.fromPrivateKey({ privateKey });
 
 const config = new AptosConfig({
   network: Network.CUSTOM,
-  fullnode: "https://aptos.testnet.suzuka.movementlabs.xyz/v1",
-  faucet: "https://faucet.testnet.suzuka.movementlabs.xyz",
-  indexer: "https://indexer.testnet.suzuka.movementlabs.xyz/v1/graphql",
+  fullnode: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+  faucet: 'https://fund.testnet.porto.movementlabs.xyz/',
+  indexer: "https://indexer.testnet.porto.movementnetwork.xyz/v1/graphql",
 });
 
 const aptos = new Aptos(config);

@@ -108,7 +108,7 @@ export default function Home() {
                 How to Play
               </h2>
               <div className="grid grid-cols-1 gap-8 mb-16">
-                <div className="border border-yellow-500 p-4 rounded-lg">
+                <div className="border border-yellow p-4 rounded-lg">
                   <h3
                     className={`${bitFont.className} text-xl mb-2 text-yellow-400`}
                   >

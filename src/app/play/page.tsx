@@ -51,9 +51,9 @@ export default function Home() {
   // Setup the client
   const config = new AptosConfig({
     network: Network.CUSTOM,
-    fullnode: "https://aptos.testnet.suzuka.movementlabs.xyz/v1",
-    faucet: "https://faucet.testnet.suzuka.movementlabs.xyz",
-    indexer: "https://indexer.testnet.suzuka.movementlabs.xyz/v1/graphql",
+    fullnode: 'https://aptos.testnet.porto.movementlabs.xyz/v1',
+    faucet: 'https://fund.testnet.porto.movementlabs.xyz/',
+    indexer: "https://indexer.testnet.porto.movementnetwork.xyz/v1/graphql",
   });
   const controlsRef = useRef();
 
@@ -331,7 +331,7 @@ export default function Home() {
           )}
         </div>
       ) : (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center border-2 w-full justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center  w-full justify-center px-4">
           <div className="bg-gray-800 p-8 rounded-lg shadow-2xl max-w-md w-full">
             <h2
               className={`${bitFont.className} text-3xl text-yellow-400 mb-6 text-center`}
